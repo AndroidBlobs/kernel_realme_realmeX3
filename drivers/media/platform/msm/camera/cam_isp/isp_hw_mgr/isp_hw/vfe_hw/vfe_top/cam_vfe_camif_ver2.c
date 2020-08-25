@@ -44,7 +44,6 @@ struct cam_vfe_mux_camif_data {
 	bool                               enable_sof_irq_debug;
 	uint32_t                           irq_debug_cnt;
 	uint32_t                           camif_debug;
-	uint32_t                           fps;
 };
 
 static int cam_vfe_camif_validate_pix_pattern(uint32_t pattern)
@@ -270,15 +269,9 @@ static int cam_vfe_camif_resource_start(
 				rsrc_data->camif_reg->epoch_irq);
 		break;
 	default:
-		if (rsrc_data->fps == CAM_ISP_FPS_60) {
-			epoch0_irq_mask = ((rsrc_data->last_line -
+		epoch0_irq_mask = ((rsrc_data->last_line -
 				rsrc_data->first_line) / 2) +
 				rsrc_data->first_line;
-		} else {
-			epoch0_irq_mask = (((rsrc_data->last_line -
-				rsrc_data->first_line) * 2) / 3) +
-				rsrc_data->first_line;
-		}
 		epoch1_irq_mask = rsrc_data->reg_data->epoch_line_cfg &
 				0xFFFF;
 		computed_epoch_line_cfg = (epoch0_irq_mask << 16) |
@@ -319,7 +312,8 @@ static int cam_vfe_camif_resource_start(
 	CAM_DBG(CAM_ISP, "Start Camif IFE %d Done", camif_res->hw_intf->hw_idx);
 	return 0;
 }
-
+#ifndef VENDOR_EDIT
+/*Zhixian.mai Cam.Drv 20190927 modify for debug supernight issuse  */
 static int cam_vfe_camif_reg_dump(
 	struct cam_vfe_mux_camif_data *camif_priv)
 {
@@ -363,7 +357,72 @@ static int cam_vfe_camif_reg_dump(
 
 	return 0;
 }
+#else
+static int cam_vfe_camif_reg_dump(
+	struct cam_vfe_mux_camif_data *camif_priv)
+{
+	uint32_t val = 0, wm_idx, offset;
+	void  *vfe_base, *bus_base, *client_base;
+	int i = 0;
 
+	wm_idx = 9;
+	vfe_base = camif_priv->soc_info->reg_map[0].mem_base;
+	bus_base = camif_priv->soc_info->reg_map[0].mem_base + 0x2000;
+	client_base = bus_base + 0x200 + (wm_idx * 0x100);
+
+	/* Only if the wm is enabled */
+	CAM_INFO(CAM_ISP, "Vfe base 0x%x, bus_base 0x%x Client Base %x",
+		vfe_base, bus_base, client_base);
+
+	for (i = 0; i < 11; i++) {
+		val = cam_io_r_mb(client_base + (i * 4));
+		CAM_INFO(CAM_ISP,
+				"[V]: TITAN_A_IFE_0_BUS_WR_CLIENT_%d_%d 0x%x offset 0x%x",
+				wm_idx, i, val, (client_base + (i * 4)));
+	}
+
+	for (i = 18; i < 30; i++) {
+		val = cam_io_r_mb(client_base + (i * 4));
+		CAM_INFO(CAM_ISP,
+				"[V]: TITAN_A_IFE_0_BUS_WR_CLIENT_%d_%d 0x%x offset 0x%x",
+				wm_idx, i, val, (client_base + (i * 4)));
+	}
+
+	CAM_INFO(CAM_ISP, "[V]: vfe_mem_base phy 0x%x", camif_priv->soc_info->mem_block[0]->start);
+
+	val = cam_io_r_mb(vfe_base + 0x47C);
+	CAM_INFO(CAM_ISP,
+		"[V]: TITAN_A_IFE_0_VFE_CAMIF_CFG 0x%x", val);
+
+	val = cam_io_r_mb(vfe_base + 0xF04);
+	CAM_INFO(CAM_ISP,
+		"[V]: TITAN_A_IFE_0_VFE_PIXEL_RAW_DUMP_CFG 0x%x", val);
+
+	val = cam_io_r_mb(vfe_base + 0xF08);
+	CAM_INFO(CAM_ISP,
+		"[V]: TITAN_A_IFE_0_VFE_BUS_ARGB_CFG 0x%x", val);
+
+	val = cam_io_r_mb(vfe_base + 0xF0C);
+	CAM_INFO(CAM_ISP,
+		"[V]: TITAN_A_IFE_0_VFE_CROP_PIXEL_RAW_DUMP_WIDTH_CFG 0x%x", val);
+
+	val = cam_io_r_mb(vfe_base + 0xF10);
+	CAM_INFO(CAM_ISP,
+		"[V]: TITAN_A_IFE_0_VFE_CROP_PIXEL_RAW_DUMP_HEIGHT_CFG 0x%x", val);
+
+	offset = 0x420;
+	val = cam_soc_util_r(camif_priv->soc_info, 1, offset);
+	CAM_INFO(CAM_ISP, "CAMNOC IFE02 MaxWR_LOW offset 0x%x value 0x%x",
+		offset, val);
+
+	offset = 0x820;
+	val = cam_soc_util_r(camif_priv->soc_info, 1, offset);
+	CAM_INFO(CAM_ISP, "CAMNOC IFE13 MaxWR_LOW offset 0x%x value 0x%x",
+		offset, val);
+
+	return 0;
+}
+#endif
 static int cam_vfe_camif_reg_dump_bh(
 	struct cam_isp_resource_node *camif_res)
 {
@@ -522,20 +581,6 @@ static int cam_vfe_camif_sof_irq_debug(
 
 	return 0;
 }
-static int cam_vfe_camif_set_fps_config(
-	struct cam_isp_resource_node *rsrc_node, void *cmd_args)
-{
-	struct cam_vfe_mux_camif_data *camif_priv = NULL;
-	struct cam_vfe_fps_config_args *fps_args = cmd_args;
-
-	camif_priv =
-		(struct cam_vfe_mux_camif_data *)rsrc_node->res_priv;
-
-	camif_priv->fps = fps_args->fps;
-
-	return 0;
-
-}
 
 static int cam_vfe_camif_process_cmd(struct cam_isp_resource_node *rsrc_node,
 	uint32_t cmd_type, void *cmd_args, uint32_t arg_size)
@@ -566,9 +611,6 @@ static int cam_vfe_camif_process_cmd(struct cam_isp_resource_node *rsrc_node,
 		break;
 	case CAM_ISP_HW_CMD_GET_IRQ_REGISTER_DUMP:
 		rc = cam_vfe_camif_irq_reg_dump(rsrc_node);
-		break;
-	case CAM_ISP_HW_CMD_FPS_CONFIG:
-		rc = cam_vfe_camif_set_fps_config(rsrc_node, cmd_args);
 		break;
 	default:
 		CAM_ERR(CAM_ISP,
