@@ -744,6 +744,7 @@ noinline int slow_avc_audit(u32 ssid, u32 tsid, u16 tclass,
 	struct common_audit_data stack_data;
 	struct selinux_audit_data sad;
 
+
 	if (!a) {
 		a = &stack_data;
 		a->type = LSM_AUDIT_DATA_NONE;
@@ -992,6 +993,7 @@ static noinline int avc_denied(u32 ssid, u32 tsid,
 	return 0;
 }
 
+
 /*
  * The avc extended permissions logic adds an additional 256 bits of
  * permissions to an avc node when extended permissions for that node are
@@ -1014,6 +1016,7 @@ int avc_has_extended_perms(u32 ssid, u32 tsid, u16 tclass, u32 requested,
 	struct avc_xperms_node *xp_node;
 	int rc = 0, rc2;
 
+	
 	xp_node = &local_xp_node;
 	BUG_ON(!requested);
 
@@ -1143,6 +1146,7 @@ int avc_has_perm(u32 ssid, u32 tsid, u16 tclass,
 	struct av_decision avd;
 	int rc, rc2;
 
+	
 	rc = avc_has_perm_noaudit(ssid, tsid, tclass, requested, 0, &avd);
 
 	rc2 = avc_audit(ssid, tsid, tclass, requested, &avd, rc, auditdata, 0);
@@ -1157,6 +1161,7 @@ int avc_has_perm_flags(u32 ssid, u32 tsid, u16 tclass,
 {
 	struct av_decision avd;
 	int rc, rc2;
+
 
 	rc = avc_has_perm_noaudit(ssid, tsid, tclass, requested, 0, &avd);
 
