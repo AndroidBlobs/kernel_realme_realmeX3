@@ -150,4 +150,20 @@ static inline int arch_spin_is_contended(arch_spinlock_t *lock)
 /* See include/linux/spinlock.h */
 #define smp_mb__after_spinlock()	smp_mb()
 
+#ifdef VENDOR_EDIT
+/* Hui.Fan@SWDP.BSP.Kernel.Stability, 2017-5-31
+ * Define arm64 smp_mb__before_spinlock to fix the rwsem issue
+ * bug: 999832 case: 02947967
+ */
+/*
+ * Accesses appearing in program order before a spin_lock() operation
+ * can be reordered with accesses inside the critical section, by virtue
+ * of arch_spin_lock being constructed using acquire semantics.
+ *
+ * In cases where this is problematic (e.g. try_to_wake_up), an
+ * smp_mb__before_spinlock() can restore the required ordering.
+ */
+#define smp_mb__before_spinlock()	smp_mb()
+#endif /* VENDOR_EDIT */
+
 #endif /* __ASM_SPINLOCK_H */
