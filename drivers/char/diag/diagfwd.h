@@ -25,6 +25,12 @@
 #define GET_BUF_NUM(n)		((n & 0x0000FF))
 #define GET_PD_CTXT(u)		((u & 0xFF000000) >> 24)
 
+#ifdef VENDOR_EDIT
+/* Kai Huang@BSP.Kernel.Stablity  2020/1/6 CR#2554922  Identify apps data buffer with hdlc context  */
+#define SET_HDLC_CTXT(u)	((u & 0xFF) << 24)
+#define GET_HDLC_CTXT(u)	((u & 0xFF000000) >> 24)
+#endif
+
 #define CHK_OVERFLOW(bufStart, start, end, length) \
 	((((bufStart) <= (start)) && ((end) - (start) >= (length))) ? 1 : 0)
 

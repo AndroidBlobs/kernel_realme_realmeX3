@@ -209,6 +209,12 @@
 #define DEFAULT_LOW_WM_VAL	15
 #define DEFAULT_HIGH_WM_VAL	85
 
+#ifdef VENDOR_EDIT
+/* Kai Huang@BSP.Kernel.Stablity  2020/1/6 CR#2554922  Identify apps data buffer with hdlc context  */
+#define HDLC_CTXT		1
+#define NON_HDLC_CTXT		2
+#endif
+
 #define TYPE_DATA		0
 #define TYPE_CNTL		1
 #define TYPE_DCI		2
