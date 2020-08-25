@@ -153,7 +153,24 @@ enum ufs_desc_def_size {
 	QUERY_DESC_INTERCONNECT_DEF_SIZE	= 0x06,
 	QUERY_DESC_GEOMETRY_DEF_SIZE		= 0x44,
 	QUERY_DESC_POWER_DEF_SIZE		= 0x62,
+#ifdef VENDOR_EDIT
+	//xiaofan.yang@PSW.TECH.Stability, 2019/03/15,Add for check storage endurance
+	QUERY_DESC_HEALTH_DEF_SIZE              = 0x25,
+#endif
 };
+
+#ifdef VENDOR_EDIT
+//xiaofan.yang@PSW.TECH.Stability, 2019/03/15,Add for check storage endurance
+/* Health descriptor parameters offsets in bytes*/
+enum health_desc_param {
+       HEALTH_DESC_PARAM_LEN                   = 0x0,
+       HEALTH_DESC_PARAM_TYPE                  = 0x1,
+       HEALTH_DESC_PARAM_EOL_INFO              = 0x2,
+       HEALTH_DESC_PARAM_LIFE_TIME_EST_A       = 0x3,
+       HEALTH_DESC_PARAM_LIFE_TIME_EST_B       = 0x4,
+       //HEALTH_DESC_PARAM_VENDOR_PROPINFO	   = 0x5,
+};
+#endif
 
 /* Unit descriptor parameters offsets in bytes*/
 enum unit_desc_param {
@@ -173,6 +190,17 @@ enum unit_desc_param {
 	UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT	= 0x18,
 	UNIT_DESC_PARAM_CTX_CAPABILITIES	= 0x20,
 	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
+#ifdef VENDOR_EDIT
+/* Hank.liu@TECH.PLAT.Storage, 2019-10-31, add UFS+ hpb and tw driver*/
+#if defined(CONFIG_UFSHPB)
+	UNIT_DESC_HPB_LU_MAX_ACTIVE_REGIONS		= 0x23,
+	UNIT_DESC_HPB_LU_PIN_REGION_START_OFFSET	= 0x25,
+	UNIT_DESC_HPB_LU_NUM_PIN_REGIONS		= 0x27,
+#endif
+#if defined(CONFIG_UFSTW)
+	UNIT_DESC_TW_LU_MAX_BUF_SIZE			= 0x29,
+#endif
+#endif
 };
 
 /* Device descriptor parameters offsets in bytes*/
@@ -204,6 +232,50 @@ enum device_desc_param {
 	DEVICE_DESC_PARAM_UD_LEN		= 0x1B,
 	DEVICE_DESC_PARAM_RTT_CAP		= 0x1C,
 	DEVICE_DESC_PARAM_FRQ_RTC		= 0x1D,
+  	DEVICE_DESC_PARAM_UFS_FEAT		= 0x1F,
+  	DEVICE_DESC_PARAM_FFU_TMT		= 0x20,
+  	DEVICE_DESC_PARAM_Q_DPTH		= 0x21,
+  	DEVICE_DESC_PARAM_DEV_VER		= 0x22,
+  	DEVICE_DESC_PARAM_NUM_SEC_WPA		= 0x24,
+  	DEVICE_DESC_PARAM_PSA_MAX_DATA		= 0x25,
+  	DEVICE_DESC_PARAM_PSA_TMT		= 0x29,
+  	DEVICE_DESC_PARAM_PRDCT_REV		= 0x2A,
+#ifdef VENDOR_EDIT
+/* Hank.liu@TECH.PLAT.Storage, 2019-10-31, add UFS+ hpb and tw driver*/
+#if defined(CONFIG_UFSHPB)
+	DEVICE_DESC_PARAM_HPB_VER		= 0x40,
+#endif
+#endif
+	DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP	= 0x4F,
+#ifdef VENDOR_EDIT
+#if defined(CONFIG_UFSTW)
+	DEVICE_DESC_PARAM_TW_RETURN_TO_USER	= 0x53,
+	DEVICE_DESC_PARAM_TW_BUF_TYPE		= 0x54,
+	DEVICE_DESC_PARAM_TW_VER		= 0x55,
+#endif
+#endif
+};
+
+/* Geometry descriptor parameters offsets in bytes*/
+enum geometry_desc_param {
+        GEOMETRY_DESC_PARAM_LEN			= 0x0,
+#ifdef VENDOR_EDIT
+/* Hank.liu@TECH.PLAT.Storage, 2019-10-31, add UFS+ hpb and tw driver*/
+#if defined(CONFIG_UFSHPB)
+	GEOMETRY_DESC_HPB_REGION_SIZE			= 0x48,
+	GEOMETRY_DESC_HPB_NUMBER_LU 			= 0x49,
+	GEOMETRY_DESC_HPB_SUBREGION_SIZE 		= 0x4A,
+	GEOMETRY_DESC_HPB_DEVICE_MAX_ACTIVE_REGIONS	= 0x4B,
+#endif
+#if defined(CONFIG_UFSTW)
+	GEOMETRY_DESC_TW_MAX_SIZE			= 0x4F,
+	GEOMETRY_DESC_TW_NUMBER_LU			= 0x53,
+	GEOMETRY_DESC_TW_CAP_ADJ_FAC			= 0x54,
+	GEOMETRY_DESC_TW_SUPPORT_USER_REDUCTION_TYPES	= 0x55,
+	GEOMETRY_DESC_TW_SUPPORT_BUF_TYPE		= 0x56,
+	GEOMETRY_DESC_TW_GROUP_NUM_CAP			= 0x57,
+#endif
+#endif
 };
 
 /*
@@ -247,6 +319,10 @@ enum power_desc_param_offset {
 enum {
 	MASK_EE_STATUS		= 0xFFFF,
 	MASK_EE_URGENT_BKOPS	= (1 << 2),
+#if defined(VENDOR_EDIT) && defined(CONFIG_UFSTW)
+/* Hank.liu@TECH.PLAT.Storage, 2019-10-31, add UFS+ hpb and tw driver*/
+	MASK_EE_TW		= (1 << 5),
+#endif
 };
 
 /* Background operation status */
